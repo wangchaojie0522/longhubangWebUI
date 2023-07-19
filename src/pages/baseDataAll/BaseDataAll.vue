@@ -29,7 +29,7 @@
             </a-form>
         </div>
         <div class="dataBox">
-            <a-table :dataSource="dataSource" :columns="columns" :pagination="false" >
+            <a-table :dataSource="dataSource" :columns="columns" :pagination="false"  size="small">
                 <template #bodyCell="{ column, record }">
                     <template v-if="column.key === 'action'">
                         <a-button type="link" @click="onEdit(record)" style="margin-rigth: 20px">编辑</a-button>
