@@ -16,12 +16,12 @@
                         新增
                     </a-button>
                 </a-form-item>
-                <!-- <a-form-item>
-                    <a-button type="primary">
-                        导入
+               <a-form-item>
+                    <a-button type="primary" @click="onReloadData">
+                        更新数据库
                     </a-button>
                 </a-form-item>
-                <a-form-item>
+                 <!-- <a-form-item>
                     <a-button type="primary">
                         下载模板
                     </a-button>
@@ -69,7 +69,7 @@
 import { UserOutlined, LockOutlined, ExclamationCircleOutlined} from '@ant-design/icons-vue';
 import { defineComponent, reactive, onMounted, ref,createVNode } from 'vue';
 import type { UnwrapRef } from 'vue';
-import { Gupiao_API } from '@/server/homepage'
+import { Gupiao_API, GupiaoRL_API } from '@/server/homepage'
 import { message,notification , Modal , FormProps} from 'ant-design-vue';
 import 'ant-design-vue/es/message/style/css'
 import {Message} from '@/common/message'
@@ -243,6 +243,24 @@ export default defineComponent({
                 },
             });
         }
+        // 更新数据库
+        const onReloadData = () => {
+            GupiaoRL_API.Post().then((res: any) => {
+                if(res.code ==200) {
+                    queryData()
+                    Message({
+                        type:'success',
+                        msg:'修改成功'
+                    })
+                }
+                else {
+                    Message({
+                        type:'error',
+                        msg: res.msg
+                    })
+                }
+            })
+        }
         onMounted(() => {
             queryData()
         })
@@ -262,6 +280,7 @@ export default defineComponent({
             onDelete,
             showTotal,
             onChange,
+            onReloadData,
         }
     }
 })
