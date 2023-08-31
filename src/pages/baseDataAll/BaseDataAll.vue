@@ -59,8 +59,10 @@
                 <a-button type="primary" @click="handleOk">保存</a-button>
             </template>
         </a-modal>
-        <a-modal v-model:visible="infoVis" title="K线图">
-           
+        <a-modal v-model:visible="infoVis" width="80vw" title="K线图">
+           <div>
+            <KInfoItem  ref="KInfoItem"  style="height: 70vh"  />
+           </div>
             <template #footer>
                 <a-button >上一页</a-button>
                 <a-button type="primary" >上一条</a-button>
@@ -75,10 +77,11 @@
 import { UserOutlined, LockOutlined, ExclamationCircleOutlined} from '@ant-design/icons-vue';
 import { defineComponent, reactive, onMounted, ref,createVNode } from 'vue';
 import type { UnwrapRef } from 'vue';
-import { Gupiao_API, GupiaoRL_API } from '@/server/homepage'
+import { Gupiao_API, GupiaoRL_API, GupiaoKInfo_API } from '@/server/homepage'
 import { message,notification , Modal , FormProps} from 'ant-design-vue';
 import 'ant-design-vue/es/message/style/css'
 import {Message} from '@/common/message'
+import KInfoItem from './KInfoItem.vue'
 interface FormState {
     symbol: string;
     pageNum: number;
@@ -104,6 +107,7 @@ export default defineComponent({
     components: {
         UserOutlined,
         LockOutlined,
+        KInfoItem,
     },
     setup() {
         const formState: UnwrapRef<FormState> = reactive({
@@ -223,8 +227,30 @@ export default defineComponent({
         }
         // k线图详情
         const infoVis = ref(false)
+        const KInfoItem = ref()
+        const KInfoData = ref<(number|string)[][]>([])
         const onInfo = (record:TableItem) => {
             infoVis.value = true
+            GupiaoKInfo_API.Get({tscode: record.tscode, start_date: '', end_date:''}).then((res: any) => {
+                if(res.code ==200) {
+                    let arr = res.data
+                    let arrN:(number|string)[][] = []
+                    arr.forEach((item: {trade_date:string,open:number,high:number,low:number,close:number,vol:number}) => {
+                        arrN.push([
+                            item.trade_date,
+                            item.open,
+                            item.high,
+                            item.low,
+                            item.close,
+                            item.vol,
+                            item.vol > res.volavg ? 1 : -1
+                        ])
+                    });
+                    KInfoData.value = arrN
+                    KInfoItem.value?.onChange(record.name + '('+ record.symbol +')', arrN)
+                }
+                
+            })
         }
         const onEdit = (record:TableItem) => {
             addFlag.value = false
@@ -308,6 +334,8 @@ export default defineComponent({
             onloadFlag,
             onInfo,
             infoVis,
+            KInfoItem,
+            KInfoData,
         }
     }
 })
