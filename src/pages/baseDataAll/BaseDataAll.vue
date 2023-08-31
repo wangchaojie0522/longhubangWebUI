@@ -3,7 +3,7 @@
         <div class="searchBox">
             <a-form layout="inline" :model="formState">
                 <a-form-item>
-                    <a-input v-model:value="formState.name" @change="queryData" placeholder="股票代码">
+                    <a-input v-model:value="formState.symbol" @change="onTextChange" placeholder="股票代码">
                     </a-input>
                 </a-form-item>
                 <a-form-item>
@@ -11,27 +11,23 @@
                         查询
                     </a-button>
                 </a-form-item>
-                <a-form-item>
+                <!-- <a-form-item>
                     <a-button type="primary" @click="onAdd">
                         新增
                     </a-button>
-                </a-form-item>
+                </a-form-item> -->
                <a-form-item>
-                    <a-button type="primary" @click="onReloadData">
+                    <a-button type="primary" @click="onReloadData" :loading="onloadFlag">
                         更新数据库
                     </a-button>
                 </a-form-item>
-                 <!-- <a-form-item>
-                    <a-button type="primary">
-                        下载模板
-                    </a-button>
-                </a-form-item> -->
             </a-form>
         </div>
         <div class="dataBox">
             <a-table :dataSource="dataSource" :columns="columns" :pagination="false"  size="small">
                 <template #bodyCell="{ column, record }">
                     <template v-if="column.key === 'action'">
+                        <a-button type="link" @click="onInfo(record)" style="margin-rigth: 20px">K线图</a-button>
                         <a-button type="link" @click="onEdit(record)" style="margin-rigth: 20px">编辑</a-button>
                         <a-button type="link" danger @click="onDelete(record)">删除</a-button>
                     </template>
@@ -42,16 +38,17 @@
         <a-modal v-model:visible="visible" :title="addFlag?'新增':'修改'">
             <a-form :model="formState1" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }" >
                 <a-form-item label="股票名称">
-                    <a-input v-model:value="formState1.name" />
+                    <a-input v-model:value="formState1.name" readonly/>
                 </a-form-item> 
                 <a-form-item label="股票代码">
-                    <a-input :readonly="!addFlag" v-model:value="formState1.code" />
+                    <a-input readonly v-model:value="formState1.symbol" />
                 </a-form-item> 
-                <a-form-item label="所属概念">
-                    <a-input v-model:value="formState1.concept" />
+               
+                <a-form-item label="上市日期">
+                <a-input v-model:value="formState1.list_date" readonly type="textarea" />
                 </a-form-item>
-                <a-form-item label="主营业务">
-                <a-input v-model:value="formState1.business" type="textarea" />
+                <a-form-item label="所属行业">
+                    <a-input v-model:value="formState1.industry" />
                 </a-form-item>
                 <a-form-item label="备注">
                 <a-input v-model:value="formState1.remark" type="textarea" />
@@ -60,6 +57,15 @@
             <template #footer>
                 <a-button @click="handleCancel">取消</a-button>
                 <a-button type="primary" @click="handleOk">保存</a-button>
+            </template>
+        </a-modal>
+        <a-modal v-model:visible="infoVis" title="K线图">
+           
+            <template #footer>
+                <a-button >上一页</a-button>
+                <a-button type="primary" >上一条</a-button>
+                <a-button >下一条</a-button>
+                <a-button type="primary" >下一页</a-button>
             </template>
         </a-modal>
     </div>
@@ -74,22 +80,24 @@ import { message,notification , Modal , FormProps} from 'ant-design-vue';
 import 'ant-design-vue/es/message/style/css'
 import {Message} from '@/common/message'
 interface FormState {
-    name: string;
+    symbol: string;
     pageNum: number;
     pageSize: number;
 }
 interface FormState1 {
     name: string;
-    code: string;
-    concept: string;
-    business: string;
+    symbol: string;
+    tscode: string;
+    industry: string;
+    list_date: string;
     remark: string;
 }
 interface TableItem {
     name: string;
-    code: string;
-    concept: string;
-    business: string;
+    symbol: string;
+    tscode: string;
+    industry: string;
+    list_date: string;
     remark: string;
 }
 export default defineComponent({
@@ -99,15 +107,16 @@ export default defineComponent({
     },
     setup() {
         const formState: UnwrapRef<FormState> = reactive({
-            name: '',
+            symbol: '',
             pageNum: 1,
             pageSize: 10,
         });
         const formState1: UnwrapRef<FormState1> = reactive({
             name: '',
-            code: '',
-            concept: '',
-            business: '',
+            symbol: '',
+            tscode: '',
+            industry: '',
+            list_date: '',
             remark: '',
         });
         const totals =ref(0)
@@ -123,18 +132,18 @@ export default defineComponent({
             },
             {
                 title: '股票代码',
-                dataIndex: 'code',
-                key: 'code',
+                dataIndex: 'symbol',
+                key: 'symbol',
             },
             {
-                title: '所属概念',
-                dataIndex: 'concept',
-                key: 'concept',
+                title: '所属行业',
+                dataIndex: 'industry',
+                key: 'industry',
             },
             {
-                title: '主营业务',
-                dataIndex: 'business',
-                key: 'business',
+                title: '上市日期',
+                dataIndex: 'list_date',
+                key: 'list_date',
             },
             {
                 title: '备注',
@@ -152,9 +161,13 @@ export default defineComponent({
             formState.pageNum = pageNumber
             queryData()
         };
+        const onTextChange = () => {
+            formState.pageNum = 1
+            queryData()
+        }
         const queryData = () => {
             totals.value = 0
-            Gupiao_API.Get({code: formState.name,pageNum: formState.pageNum, pageSize: formState.pageSize }).then((res: any) => {
+            Gupiao_API.Get({symbol: formState.symbol,pageNum: formState.pageNum, pageSize: formState.pageSize }).then((res: any) => {
                 if(res.code==200){
                     dataSource.value = res.data
                     totals.value = res.count
@@ -208,13 +221,19 @@ export default defineComponent({
            }
             
         }
+        // k线图详情
+        const infoVis = ref(false)
+        const onInfo = (record:TableItem) => {
+            infoVis.value = true
+        }
         const onEdit = (record:TableItem) => {
             addFlag.value = false
             visible.value = true
+            formState1.tscode =record.tscode
             formState1.name =record.name
-            formState1.code =record.code
-            formState1.concept = record.concept
-            formState1.business = record.business
+            formState1.symbol =record.symbol
+            formState1.industry = record.industry
+            formState1.list_date = record.list_date
             formState1.remark = record.remark
         }
         const onDelete = (record:TableItem) => {
@@ -222,7 +241,7 @@ export default defineComponent({
                 title: '确定要删除该条数据吗?',
                 icon: createVNode(ExclamationCircleOutlined),
                 onOk() {
-                    Gupiao_API.Delete({code: record.code}).then((res: any) => {
+                    Gupiao_API.Delete({tscode: record.tscode}).then((res: any) => {
                         if(res.code ==200) {
                             queryData()
                             Message({
@@ -244,9 +263,12 @@ export default defineComponent({
             });
         }
         // 更新数据库
+        const onloadFlag = ref(false)
         const onReloadData = () => {
+            onloadFlag.value = true
             GupiaoRL_API.Post().then((res: any) => {
-                if(res.code ==200) {
+                if(res.code == 200) {
+                    onloadFlag.value = false
                     queryData()
                     Message({
                         type:'success',
@@ -254,6 +276,7 @@ export default defineComponent({
                     })
                 }
                 else {
+                    onloadFlag.value = false
                     Message({
                         type:'error',
                         msg: res.msg
@@ -267,6 +290,7 @@ export default defineComponent({
         return {
             formState,
             queryData,
+            onTextChange,
             dataSource,
             columns,
             totals,
@@ -281,6 +305,9 @@ export default defineComponent({
             showTotal,
             onChange,
             onReloadData,
+            onloadFlag,
+            onInfo,
+            infoVis,
         }
     }
 })
