@@ -50,8 +50,10 @@ export default defineComponent({
             return result;
         }
         // 图表显示
-        const echartShow = (nameStr:string, KInfoData:(number|string)[][]) => {
+        const echartShow = (kType:string,nameStr:string, KInfoData:(number|string)[][]) => {
             console.log(KInfoData)
+            let legData = ['MA5', 'MA10', 'MA20']
+            legData.unshift(kType)
             let option = {
                 dataset: {
                     source: KInfoData
@@ -66,7 +68,7 @@ export default defineComponent({
                     }
                 },
                 legend: {
-                    data: ['日K', 'MA5', 'MA10', 'MA20']
+                    data: legData
                 },
                 toolbox: {
                     feature: {
@@ -166,18 +168,18 @@ export default defineComponent({
                 },
                 series: [
                     {
-                        name: '日K',
-                    type: 'candlestick',
-                    itemStyle: {
-                        color: upColor,
-                        color0: downColor,
-                        borderColor: upBorderColor,
-                        borderColor0: downBorderColor
-                    },
-                    encode: {
-                        x: 0,
-                        y: [1, 4, 3, 2]
-                    }
+                        name:kType,
+                        type: 'candlestick',
+                        itemStyle: {
+                            color: upColor,
+                            color0: downColor,
+                            borderColor: upBorderColor,
+                            borderColor0: downBorderColor
+                        },
+                        encode: {
+                            x: 0,
+                            y: [1, 4, 3, 2]
+                        }
                     },
                     {
                     name: 'Volumn',
@@ -228,13 +230,9 @@ export default defineComponent({
             // 绘制图表
             myChart.setOption(option);
         }
-        type DataItem = [string, number, number, number, number, number, number];
-
-       
-       
-        const onChange = (nameStr:string,KInfoData:(number|string)[][]) => {
+        const onChange = (kType:string,nameStr:string,KInfoData:(number|string)[][]) => {
             myChart.clear()
-            echartShow(nameStr,KInfoData)
+            echartShow(kType,nameStr,KInfoData)
         }
         onMounted(()=>{
             canDom = document.getElementById('kinfo') as HTMLCanvasElement

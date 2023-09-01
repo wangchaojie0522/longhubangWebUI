@@ -61,6 +61,9 @@
         </a-modal>
         <a-modal v-model:visible="infoVis" width="80vw" title="K线图">
            <div>
+            <div class="kListBox">
+                <span :class="{'kitem':true,'kitemActive': item.id == activeKId.id}" v-for="item in klist" :key="item.id" @click="onChangeK(item)">{{item.name}}</span>
+            </div>
             <KInfoItem  ref="KInfoItem"  style="height: 70vh"  />
            </div>
             <template #footer>
@@ -229,9 +232,19 @@ export default defineComponent({
         const infoVis = ref(false)
         const KInfoItem = ref()
         const KInfoData = ref<(number|string)[][]>([])
+        const klist = ref([{name:'日k',id:'d'},{name:'周k',id:'w'},{name:'月k',id:'m'}])
+        const activeKId = ref({name:'日k',id:'d'})
+        const activeItem = ref<TableItem>()
+        const onChangeK = (record: {name:string,id:string}) => {
+            activeKId.value = record
+            if(activeItem.value) {
+                onInfo(activeItem.value)
+            }
+        }
         const onInfo = (record:TableItem) => {
             infoVis.value = true
-            GupiaoKInfo_API.Get({tscode: record.tscode, start_date: '', end_date:''}).then((res: any) => {
+            activeItem.value = record
+            GupiaoKInfo_API.Get({tscode: record.tscode, start_date: '', end_date:'',ktype: activeKId.value.id}).then((res: any) => {
                 if(res.code ==200) {
                     let arr = res.data
                     let arrN:(number|string)[][] = []
@@ -247,7 +260,7 @@ export default defineComponent({
                         ])
                     });
                     KInfoData.value = arrN
-                    KInfoItem.value?.onChange(record.name + '('+ record.symbol +')', arrN)
+                    KInfoItem.value?.onChange(activeKId.value.name, record.name + '('+ record.symbol +')', arrN)
                 }
                 
             })
@@ -336,6 +349,10 @@ export default defineComponent({
             infoVis,
             KInfoItem,
             KInfoData,
+            klist,
+            activeKId,
+            onChangeK,
+            activeItem,
         }
     }
 })
@@ -357,6 +374,21 @@ export default defineComponent({
     .paginationBox {
         padding: 10px 20px;
         text-align: right;
+    }
+   
+    
+}
+.kListBox {
+    display: flex;
+    height: 40px;
+    line-height: 40px;
+    .kitem{
+        cursor: pointer;
+        width: 60px;
+        text-align: center;
+    }
+    .kitemActive {
+        color: blue;
     }
 }
 </style>
