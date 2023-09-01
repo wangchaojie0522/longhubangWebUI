@@ -2,7 +2,7 @@
  * @Author: chaojiewang chaojiewang@deepglint.com
  * @Date: 2023-06-06 19:12:47
  * @LastEditors: chaojiewang chaojiewang@deepglint.com
- * @LastEditTime: 2023-07-19 15:08:08
+ * @LastEditTime: 2023-09-01 12:26:04
  * @FilePath: \webUI\src\pages\Home.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -34,13 +34,16 @@ export default defineComponent({
     setup() {
         const activeItem = ref<string>('baseDataAll');
         const menuArr = [{
-            label: '基础数据',
+            label: 'A股基础数据',
             path: 'baseData',
             showFlag: true,
             icon: 'BarChartOutlined',
             children: [{
-                label: '大盘数据',
+                label: '股票数据',
                 path: 'baseDataAll',
+            },{
+                label: 'ETF数据',
+                path: 'etfdata',
             }]
         }, {
             label: '龙虎榜',
