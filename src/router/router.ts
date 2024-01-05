@@ -2,7 +2,7 @@
  * @Author: chaojiewang chaojiewang@deepglint.com
  * @Date: 2023-06-06 19:04:04
  * @LastEditors: chaojiewang chaojiewang@deepglint.com
- * @LastEditTime: 2023-09-01 12:25:55
+ * @LastEditTime: 2024-01-04 17:33:10
  * @FilePath: \webUI\src\router\router.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -26,13 +26,17 @@ const routes:Array<RouteRecordRaw> = [
                 name: 'baseDataAll',
                 component: () => import('@/pages/baseDataAll/BaseDataAll.vue'),
             },{
-                path: 'etfdata',
-                name: 'etfdata',
+                path: 'baseDataEtf',
+                name: 'baseDataEtf',
                 component: () => import('@/pages/baseDataAll/ETFdata.vue'),
             },{
                 path: 'longhubang',
                 name: 'longhubang',
                 component: () => import('@/pages/longhubang/Longhubang.vue'),
+            },{
+                path: 'lhbZhangTing',
+                name: 'lhbZhangTing',
+                component: () => import('@/pages/longhubang/ZhangTing.vue'),
             },]
         }]
     }
